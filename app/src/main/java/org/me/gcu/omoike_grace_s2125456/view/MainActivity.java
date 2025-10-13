@@ -66,7 +66,7 @@ public class MainActivity extends AppCompatActivity {
         //Fetch data when button clicked
         startButton.setOnClickListener(v -> viewModel.loadCurrencies());
 
-        //ListView item click → open conversion screen
+        //ListView item click, open conversion screen
         listView.setOnItemClickListener((parent, view, position, id) -> {
             CurrencyItem selectedCurrency = (CurrencyItem) adapter.getItem(position);
             selectedCode = selectedCurrency.getTargetCurrencyCode();
@@ -76,6 +76,12 @@ public class MainActivity extends AppCompatActivity {
             TextView rateInfo = findViewById(R.id.rateInfo);
             titleText.setText("Convert GBP → " + selectedCode);
             rateInfo.setText(String.format("1 GBP = %.4f %s", selectedRate, selectedCode));
+
+
+            EditText gbpInput = findViewById(R.id.gbpInput);
+            gbpInput.setText(""); // clear old input
+            TextView resultText = findViewById(R.id.resultText);
+            resultText.setText("");
 
             viewSwitcher.showNext();
         });
@@ -130,6 +136,11 @@ public class MainActivity extends AppCompatActivity {
             titleText.setText("Convert GBP → " + selectedCode);
             rateInfo.setText(String.format("1 GBP = %.4f %s", selectedRate, selectedCode));
 
+
+            EditText gbpInput = findViewById(R.id.gbpInput);
+            TextView resultText = findViewById(R.id.resultText);
+            gbpInput.setText("");
+            resultText.setText("");
             viewSwitcher.showNext();
         };
 
