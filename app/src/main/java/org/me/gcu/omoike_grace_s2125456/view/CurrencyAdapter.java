@@ -1,4 +1,4 @@
-package org.me.gcu.omoike_grace_s2125456;
+package org.me.gcu.omoike_grace_s2125456.view;
 
 import android.content.Context;
 import android.graphics.Color;
@@ -9,6 +9,10 @@ import android.widget.BaseAdapter;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
+
+import org.me.gcu.omoike_grace_s2125456.R;
+import org.me.gcu.omoike_grace_s2125456.model.CurrencyItem;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,7 +56,7 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         code.setText(item.getTargetCurrencyCode());
         rate.setText(String.format("%.4f", item.getExchangeRate()));
 
-        // 🎨 Colour coding
+        // Colour coding
         double rateValue = item.getExchangeRate();
         convertView.setBackgroundColor(Color.WHITE);
         if (rateValue < 1.0) {
@@ -68,7 +72,7 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         return convertView;
     }
 
-    // 🔍 Filter logic
+    // Filter logic
     @Override
     public Filter getFilter() {
         return new Filter() {

@@ -1,4 +1,4 @@
-package org.me.gcu.omoike_grace_s2125456;
+package org.me.gcu.omoike_grace_s2125456.model;
 
 
 public class CurrencyItem {
