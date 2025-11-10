@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/screenConversion"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:padding="16dp"
+    android:gravity="center_horizontal"
+    android:background="#212121">
+
+    <!-- Title -->
+    <TextView
+        android:id="@+id/titleText"
+        android:text="Currency Conversion"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        android:textColor="@android:color/white"
+        android:layout_marginBottom="8dp"
+        android:gravity="center"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Rate Info -->
+    <TextView
+        android:id="@+id/rateInfo"
+        android:text="1 GBP = ?"
+        android:textSize="16sp"
+        android:textColor="#B0BEC5"
+        android:gravity="center"
+        android:layout_marginBottom="16dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <!-- Input Display (like calculator) -->
+    <EditText
+        android:id="@+id/gbpInput"
+        android:hint="Enter amount in GBP"
+        android:inputType="numberDecimal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="12dp"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:imeOptions="actionDone" />
+
+
+    <!-- Result Display -->
+    <TextView
+        android:id="@+id/resultText"
+        android:text="= 0"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:textColor="#FFA726"
+        android:gravity="end"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginBottom="16dp" />
+
+    <!-- Calculator Grid -->
+    <GridLayout
+        android:id="@+id/keypadLayout"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:rowCount="5"
+        android:columnCount="4"
+        android:alignmentMode="alignMargins"
+        android:useDefaultMargins="true">
+
+        <Button android:id="@+id/btnClear" android:text="C" style="@style/CalcButton" />
+        <Button android:id="@+id/btnBack" android:text="⌫" style="@style/CalcButton" />
+        <Button android:id="@+id/btnSwap" android:text="⇅" style="@style/CalcButton" />
+        <Button android:id="@+id/btnDivide" android:text="÷" style="@style/CalcButtonOrange" />
+
+        <Button android:id="@+id/btn7" android:text="7" style="@style/CalcButton" />
+        <Button android:id="@+id/btn8" android:text="8" style="@style/CalcButton" />
+        <Button android:id="@+id/btn9" android:text="9" style="@style/CalcButton" />
+        <Button android:id="@+id/btnMultiply" android:text="×" style="@style/CalcButtonOrange" />
+
+        <Button android:id="@+id/btn4" android:text="4" style="@style/CalcButton" />
+        <Button android:id="@+id/btn5" android:text="5" style="@style/CalcButton" />
+        <Button android:id="@+id/btn6" android:text="6" style="@style/CalcButton" />
+        <Button android:id="@+id/btnMinus" android:text="−" style="@style/CalcButtonOrange" />
+
+        <Button android:id="@+id/btn1" android:text="1" style="@style/CalcButton" />
+        <Button android:id="@+id/btn2" android:text="2" style="@style/CalcButton" />
+        <Button android:id="@+id/btn3" android:text="3" style="@style/CalcButton" />
+        <Button android:id="@+id/btnPlus" android:text="+" style="@style/CalcButtonOrange" />
+
+        <Button android:id="@+id/btn0" android:text="0" style="@style/CalcButtonWide" />
+        <Button android:id="@+id/btnDot" android:text="." style="@style/CalcButton" />
+        <Button android:id="@+id/btnEquals" android:text="=" style="@style/CalcButtonOrange" />
+    </GridLayout>
+
+    <!-- Navigation Buttons -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:layout_marginTop="8dp">
+
+        <Button
+            android:id="@+id/backButton"
+            android:text="Back to List"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@android:color/holo_blue_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp" />
+
+        <Button
+            android:id="@+id/mapButton"
+            android:text="Show Map"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:background="@android:color/holo_green_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp" />
+    </LinearLayout>
+
+</LinearLayout>

@@ -66,6 +66,7 @@ public class CurrencyRepository {
                     switch (currentTag) {
                         case "title":
                             currentItem.setTitle(text);
+                            Log.d("RSS_TITLE", "Title: " + text);
                             break;
                         case "description":
                             currentItem.setDescription(text);
