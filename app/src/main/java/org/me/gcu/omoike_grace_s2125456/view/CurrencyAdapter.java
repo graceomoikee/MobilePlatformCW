@@ -73,7 +73,7 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
     }
 
     // Filter logic
-    @Override
+    /*@Override
     public Filter getFilter() {
         return new Filter() {
             @Override
@@ -101,7 +101,59 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
                 notifyDataSetChanged();
             }
         };
+    }*/
+
+    @Override
+    public Filter getFilter() {
+        return new Filter() {
+            @Override
+            protected FilterResults performFiltering(CharSequence constraint) {
+                FilterResults results = new FilterResults();
+
+                if (constraint == null || constraint.length() == 0) {
+                    results.values = new ArrayList<>(originalList);
+                } else {
+                    String query = constraint.toString().toLowerCase().trim();
+                    List<CurrencyItem> filtered = new ArrayList<>();
+
+                    for (CurrencyItem item : originalList) {
+                        String title = item.getTitle() != null ? item.getTitle().toLowerCase() : "";
+                        String code = item.getTargetCurrencyCode() != null ? item.getTargetCurrencyCode().toLowerCase() : "";
+
+                        // ✅ Match currency name (Dollar, Yuan, Yen, etc.)
+                        if (title.contains(query) || code.contains(query)) {
+                            filtered.add(item);
+                            continue;
+                        }
+
+                        //  Match by derived country
+                        if (title.contains("chinese") && query.contains("china")) filtered.add(item);
+                        else if (title.contains("japanese") && query.contains("japan")) filtered.add(item);
+                        else if (title.contains("british") && (query.contains("uk") || query.contains("united kingdom"))) filtered.add(item);
+                        else if (title.contains("american") && (query.contains("usa") || query.contains("united states") || query.contains("america"))) filtered.add(item);
+                        else if (title.contains("korean") && query.contains("korea")) filtered.add(item);
+                        else if (title.contains("indian") && query.contains("india")) filtered.add(item);
+                        else if (title.contains("mexican") && query.contains("mexico")) filtered.add(item);
+                        else if (title.contains("brazilian") && query.contains("brazil")) filtered.add(item);
+                        else if (title.contains("russian") && query.contains("russia")) filtered.add(item);
+                    }
+
+                    results.values = filtered;
+                }
+
+                return results;
+            }
+
+            @Override
+            protected void publishResults(CharSequence constraint, FilterResults results) {
+                filteredList = (ArrayList<CurrencyItem>) results.values;
+                notifyDataSetChanged();
+            }
+        };
     }
+
+
+
 
     // Refresh data from MainActivity
     public void updateData(ArrayList<CurrencyItem> newList) {
