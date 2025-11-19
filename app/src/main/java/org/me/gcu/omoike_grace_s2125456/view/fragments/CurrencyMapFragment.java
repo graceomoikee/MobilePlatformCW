@@ -1,6 +1,14 @@
+
 package org.me.gcu.omoike_grace_s2125456.view.fragments;
 
+import android.content.pm.PackageManager;
+import android.location.Address;
+import android.location.Geocoder;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -13,23 +21,16 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
 
 import org.me.gcu.omoike_grace_s2125456.R;
+
+import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback {
 
     private String currencyCode;
-
-    private static final Map<String, LatLng> countryMap = new HashMap<>();
-    static {
-        countryMap.put("USD", new LatLng(38.9, -77.0));   // Washington DC
-        countryMap.put("EUR", new LatLng(50.1, 8.6));     // Frankfurt
-        countryMap.put("JPY", new LatLng(35.7, 139.7));   // Tokyo
-        countryMap.put("CNY", new LatLng(39.9, 116.4));   // Beijing
-        countryMap.put("INR", new LatLng(28.6, 77.2));    // New Delhi
-        countryMap.put("BRL", new LatLng(-15.8, -47.9));  // Brasília
-        countryMap.put("GBP", new LatLng(51.5, -0.1));    // London
-    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -52,19 +53,92 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
         SupportMapFragment mapFragment =
                 (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
         if (mapFragment != null) mapFragment.getMapAsync(this);
+
+        //  Add navigation buttons
+        Button btnBackToList = view.findViewById(R.id.btnBackToList);
+        Button btnBackToConvert = view.findViewById(R.id.btnBackToConvert);
+
+        //Button btnBackToConvert = view.findViewById(R.id.btnBackToConvert);
+        if (btnBackToConvert != null) {
+            btnBackToConvert.setOnClickListener(v -> {
+                String code = currencyCode;
+                if (code != null && code.contains("(") && code.contains(")")) {
+                    code = code.substring(code.indexOf("(") + 1, code.indexOf(")"));
+                }
+                // Delegate to activity to open conversion fragment (keeps navigation consistent)
+                if (requireActivity() instanceof org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) {
+                    ((org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) requireActivity())
+                            .onCurrencySelected(code, 0.0);
+                } else {
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                }
+            });
+        }
+
+        // Back to currency list
+        btnBackToList.setOnClickListener(v -> {
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer,
+                            new org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment(),
+                            "CurrencyList")
+                    .commit();
+        });
+
+        // Convert button: explicitly ask the Activity to open the conversion screen
+        if (btnBackToConvert != null) {
+            btnBackToConvert.setOnClickListener(v -> {
+                // parse ISO code from strings like "Euro (EUR)"
+                String code = currencyCode;
+                if (code != null && code.contains("(") && code.contains(")")) {
+                    code = code.substring(code.indexOf("(") + 1, code.indexOf(")"));
+                }
+
+                // If the activity implements the listener, delegate to it (so it opens conversion)
+                if (requireActivity() instanceof org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) {
+                    org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener listener =
+                            (org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) requireActivity();
+                    // pass 0.0 for rate if you don't have it here; MainActivity can open conversion UI and fetch/update rate
+                    listener.onCurrencySelected(code, 0.0);
+                } else {
+                    // fallback: pop back stack (existing behavior)
+                    requireActivity().getSupportFragmentManager().popBackStack();
+                }
+            });
+        }
     }
 
     @Override
     public void onMapReady(@NonNull GoogleMap googleMap) {
-        LatLng location = new LatLng(0, 0); // default
-        String code = currencyCode != null ? currencyCode : "";
-        android.util.Log.d("MAP_DEBUG", "Currency code passed: " + currencyCode);
+        try {
+            String key = requireContext().getPackageManager()
+                    .getApplicationInfo(requireContext().getPackageName(), PackageManager.GET_META_DATA)
+                    .metaData.getString("com.google.android.geo.API_KEY");
+            Log.d("MAP_KEY_DEBUG", "Loaded API key: " + key);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
-        for (Map.Entry<String, LatLng> entry : countryMap.entrySet()) {
-            if (code.contains(entry.getKey())) {  // allow partial match like "(GBP)"
-                location = entry.getValue();
-                break;
+        String code = currencyCode;
+        if (code != null && code.contains("(") && code.contains(")")) {
+            code = code.substring(code.indexOf("(") + 1, code.indexOf(")"));
+        }
+
+        LatLng location = new LatLng(0, 0);
+        String countryName = getCountryNameFromCode(code);
+
+        try {
+            Geocoder geocoder = new Geocoder(requireContext(), Locale.getDefault());
+            List<Address> results = geocoder.getFromLocationName(countryName, 1);
+            if (results != null && !results.isEmpty()) {
+                Address address = results.get(0);
+                location = new LatLng(address.getLatitude(), address.getLongitude());
+                Log.d("MAP_DEBUG", "Found " + countryName + " → " + location);
+            } else {
+                Log.d("MAP_DEBUG", "No location found for " + countryName);
             }
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         googleMap.addMarker(new MarkerOptions()
@@ -73,4 +147,29 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
         googleMap.moveCamera(CameraUpdateFactory.newLatLngZoom(location, 4f));
     }
 
+    private String getCountryNameFromCode(String code) {
+        try {
+            java.util.Currency currency = java.util.Currency.getInstance(code);
+            java.util.Locale locale = null;
+            for (java.util.Locale l : java.util.Locale.getAvailableLocales()) {
+                try {
+                    if (java.util.Currency.getInstance(l).equals(currency)) {
+                        locale = l;
+                        break;
+                    }
+                } catch (Exception ignored) {}
+            }
+            if (locale != null) {
+                return locale.getDisplayCountry();
+            }
+        } catch (Exception ignored) {}
+
+        Map<String, String> fallback = new HashMap<>();
+        fallback.put("ANG", "Netherlands Antilles");
+        fallback.put("XCD", "Saint Lucia");
+        fallback.put("XOF", "Senegal");
+        fallback.put("XAF", "Cameroon");
+        fallback.put("BBD", "Barbados");
+        return fallback.getOrDefault(code, code);
+    }
 }

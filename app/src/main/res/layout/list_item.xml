@@ -1,23 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical"
-    android:padding="8dp"
+<androidx.cardview.widget.CardView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:card_view="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content">
+    android:layout_height="wrap_content"
+    android:layout_marginHorizontal="10dp"
+    android:layout_marginVertical="6dp"
+    card_view:cardCornerRadius="14dp"
+    card_view:cardElevation="6dp"
+    card_view:cardBackgroundColor="@android:color/white"
+    android:foreground="?attr/selectableItemBackground">
 
-    <TextView
-        android:id="@+id/currencyCode"
-        android:layout_width="wrap_content"
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:textStyle="bold"
-        android:textSize="18sp"
-        android:textColor="@android:color/black" />
+        android:orientation="vertical"
+        android:padding="14dp">
 
-    <TextView
-        android:id="@+id/currencyRate"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:textSize="15sp"
-        android:textColor="@android:color/darker_gray" />
+        <!-- Currency Name + Code -->
+        <TextView
+            android:id="@+id/currencyCode"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Currency (CODE)"
+            android:textStyle="bold"
+            android:textSize="18sp"
+            android:textColor="#212121"
+            android:layout_marginBottom="4dp" />
 
-</LinearLayout>
+        <!-- Exchange Rate -->
+        <TextView
+            android:id="@+id/currencyRate"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="1.23"
+            android:textSize="15sp"
+            android:textColor="#757575"
+            android:layout_marginBottom="8dp" />
+
+        <!-- Buttons -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="end"
+            android:layout_marginTop="4dp">
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnMap"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="?attr/colorSecondary"
+                android:text="Map"
+                android:textAllCaps="false"
+                style="?attr/materialButtonStyle"
+                android:layout_marginEnd="8dp" />
+
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/btnConvert"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Convert"
+                android:textAllCaps="false"
+                style="?attr/materialButtonStyle" />
+        </LinearLayout>
+
+    </LinearLayout>
+</androidx.cardview.widget.CardView>

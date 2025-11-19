@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
 import android.widget.TextView;
@@ -17,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class CurrencyAdapter extends BaseAdapter implements Filterable {
+
     private final Context context;
     private final ArrayList<CurrencyItem> originalList; // all currencies
     private ArrayList<CurrencyItem> filteredList;       // visible items
@@ -52,11 +54,13 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
 
         TextView code = convertView.findViewById(R.id.currencyCode);
         TextView rate = convertView.findViewById(R.id.currencyRate);
+        Button btnMap = convertView.findViewById(R.id.btnMap);
+        Button btnConvert = convertView.findViewById(R.id.btnConvert);
 
         code.setText(item.getTargetCurrencyCode());
-        rate.setText(String.format("%.4f", item.getExchangeRate()));
+        rate.setText(String.format("%.2f", item.getExchangeRate()));
 
-        // Colour coding
+        // --- Colour coding ---
         double rateValue = item.getExchangeRate();
         convertView.setBackgroundColor(Color.WHITE);
         if (rateValue < 1.0) {
@@ -69,93 +73,64 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
             convertView.setBackgroundColor(Color.parseColor("#FFCDD2"));  // light red
         }
 
+        // --- Button actions ---
+        btnMap.setOnClickListener(v -> {
+            if (context instanceof OnCurrencyActionListener) {
+                ((OnCurrencyActionListener) context)
+                        .onShowMap(item.getTargetCurrencyCode());
+            }
+        });
+
+        btnConvert.setOnClickListener(v -> {
+            if (context instanceof OnCurrencyActionListener) {
+                ((OnCurrencyActionListener) context)
+                        .onConvert(item.getTargetCurrencyCode(), item.getExchangeRate());
+            }
+        });
+
         return convertView;
     }
-
-    // Filter logic
-    /*@Override
-    public Filter getFilter() {
-        return new Filter() {
-            @Override
-            protected FilterResults performFiltering(CharSequence constraint) {
-                FilterResults results = new FilterResults();
-                if (constraint == null || constraint.length() == 0) {
-                    results.values = new ArrayList<>(originalList);
-                } else {
-                    String query = constraint.toString().toLowerCase().trim();
-                    List<CurrencyItem> filtered = new ArrayList<>();
-                    for (CurrencyItem item : originalList) {
-                        if (item.getTargetCurrencyCode().toLowerCase().contains(query)
-                                || (item.getTitle() != null && item.getTitle().toLowerCase().contains(query))) {
-                            filtered.add(item);
-                        }
-                    }
-                    results.values = filtered;
-                }
-                return results;
-            }
-
-            @Override
-            protected void publishResults(CharSequence constraint, FilterResults results) {
-                filteredList = (ArrayList<CurrencyItem>) results.values;
-                notifyDataSetChanged();
-            }
-        };
-    }*/
 
     @Override
     public Filter getFilter() {
         return new Filter() {
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                FilterResults results = new FilterResults();
+                List<CurrencyItem> filteredList = new ArrayList<>();
 
                 if (constraint == null || constraint.length() == 0) {
-                    results.values = new ArrayList<>(originalList);
+                    filteredList.addAll(originalList);
                 } else {
-                    String query = constraint.toString().toLowerCase().trim();
-                    List<CurrencyItem> filtered = new ArrayList<>();
+                    String filterPattern = constraint.toString().toLowerCase().trim();
 
                     for (CurrencyItem item : originalList) {
-                        String title = item.getTitle() != null ? item.getTitle().toLowerCase() : "";
+                        String name = item.getCurrencyName() != null ? item.getCurrencyName().toLowerCase() : "";
                         String code = item.getTargetCurrencyCode() != null ? item.getTargetCurrencyCode().toLowerCase() : "";
+                        String country = item.getCountryName() != null ? item.getCountryName().toLowerCase() : "";
 
-                        // ✅ Match currency name (Dollar, Yuan, Yen, etc.)
-                        if (title.contains(query) || code.contains(query)) {
-                            filtered.add(item);
-                            continue;
+                        if (name.contains(filterPattern)
+                                || code.contains(filterPattern)
+                                || country.contains(filterPattern)) {
+                            filteredList.add(item);
                         }
-
-                        //  Match by derived country
-                        if (title.contains("chinese") && query.contains("china")) filtered.add(item);
-                        else if (title.contains("japanese") && query.contains("japan")) filtered.add(item);
-                        else if (title.contains("british") && (query.contains("uk") || query.contains("united kingdom"))) filtered.add(item);
-                        else if (title.contains("american") && (query.contains("usa") || query.contains("united states") || query.contains("america"))) filtered.add(item);
-                        else if (title.contains("korean") && query.contains("korea")) filtered.add(item);
-                        else if (title.contains("indian") && query.contains("india")) filtered.add(item);
-                        else if (title.contains("mexican") && query.contains("mexico")) filtered.add(item);
-                        else if (title.contains("brazilian") && query.contains("brazil")) filtered.add(item);
-                        else if (title.contains("russian") && query.contains("russia")) filtered.add(item);
                     }
-
-                    results.values = filtered;
                 }
 
+                FilterResults results = new FilterResults();
+                results.values = filteredList;
                 return results;
             }
 
             @Override
             protected void publishResults(CharSequence constraint, FilterResults results) {
-                filteredList = (ArrayList<CurrencyItem>) results.values;
+                filteredList.clear();
+                filteredList.addAll((List<CurrencyItem>) results.values);
                 notifyDataSetChanged();
             }
         };
     }
 
-
-
-
-    // Refresh data from MainActivity
+    // Refresh data from ViewModel
     public void updateData(ArrayList<CurrencyItem> newList) {
         originalList.clear();
         originalList.addAll(newList);
@@ -163,3 +138,6 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         notifyDataSetChanged();
     }
 }
+
+
+

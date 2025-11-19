@@ -46,7 +46,7 @@ public class CurrencyConversionFragment extends Fragment {
 
         // --- Display initial conversion info ---
         titleText.setText("Convert GBP → " + selectedCode);
-        rateInfo.setText(String.format("1 GBP = %.4f %s", selectedRate, selectedCode));
+        rateInfo.setText(String.format("1 GBP = %.2f %s", selectedRate, selectedCode));
 
         // --- Keyboard behaviour ---
         gbpInput.setInputType(EditorInfo.TYPE_CLASS_NUMBER | EditorInfo.TYPE_NUMBER_FLAG_DECIMAL);
@@ -55,14 +55,35 @@ public class CurrencyConversionFragment extends Fragment {
         // --- Swap conversion direction ---
         btnSwap.setOnClickListener(v -> {
             isReversed = !isReversed;
+
+            // Update labels
             if (isReversed) {
                 titleText.setText("Convert " + selectedCode + " → GBP");
-                rateInfo.setText(String.format("1 %s = %.4f GBP", selectedCode, 1 / selectedRate));
-                resultText.setText("Mode: " + selectedCode + " → GBP");
+                rateInfo.setText(String.format("1 %s = %.2f GBP", selectedCode, 1 / selectedRate));
             } else {
                 titleText.setText("Convert GBP → " + selectedCode);
-                rateInfo.setText(String.format("1 GBP = %.4f %s", selectedRate, selectedCode));
-                resultText.setText("Mode: GBP → " + selectedCode);
+                rateInfo.setText(String.format("1 GBP = %.2f %s", selectedRate, selectedCode));
+            }
+
+            // Automatically re-run conversion if there’s input
+            String input = gbpInput.getText().toString().trim();
+            if (!input.isEmpty()) {
+                try {
+                    double value = Double.parseDouble(input);
+                    double result;
+
+                    if (isReversed) {
+                        result = value / selectedRate;
+                        resultText.setText(String.format("%.2f %s = %.2f GBP", value, selectedCode, result));
+                    } else {
+                        result = value * selectedRate;
+                        resultText.setText(String.format("%.2f GBP = %.2f %s", value, result, selectedCode));
+                    }
+                } catch (NumberFormatException e) {
+                    resultText.setText("Invalid input - please enter numbers only");
+                }
+            } else {
+                resultText.setText("Enter amount");
             }
         });
 
@@ -92,9 +113,15 @@ public class CurrencyConversionFragment extends Fragment {
         });
 
         // --- Back button (return to list) ---
-        backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
-
-
+        //backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
+        //Button backButton = view.findViewById(R.id.backButton);
+        backButton.setOnClickListener(v -> {
+            // Always show the list fragment explicitly so rotation/back stack/order can't leave the Map visible.
+            requireActivity().getSupportFragmentManager()
+                    .beginTransaction()
+                    .replace(R.id.fragmentContainer, new org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment(), "CurrencyList")
+                    .commit();
+        });
         // --- Map button (opens map screen) ---
         mapButton.setOnClickListener(v -> {
             CurrencyMapFragment mapFragment = new CurrencyMapFragment();
@@ -112,7 +139,27 @@ public class CurrencyConversionFragment extends Fragment {
                     .commit();
         });
 
+        // --- 🔄 Restore input and result after rotation ---
+        if (savedInstanceState != null) {
+            String savedInput = savedInstanceState.getString("inputAmount", "");
+            String savedResult = savedInstanceState.getString("resultText", "");
+
+            gbpInput.setText(savedInput);
+            resultText.setText(savedResult);
+        }
 
         return view;
+    }
+
+    // --- Save state so rotation keeps data ---
+    @Override
+    public void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        EditText gbpInput = requireView().findViewById(R.id.gbpInput);
+        TextView resultText = requireView().findViewById(R.id.resultText);
+
+        outState.putString("inputAmount", gbpInput.getText().toString());
+        outState.putString("resultText", resultText.getText().toString());
     }
 }

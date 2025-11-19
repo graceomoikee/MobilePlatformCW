@@ -2,4 +2,20 @@
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+
+    <!-- Main theme colours -->
+    <color name="md_theme_primaryContainer">#1976D2</color>   <!-- blue -->
+    <color name="md_theme_secondaryContainer">#388E3C</color> <!-- green -->
+    <color name="md_theme_tertiaryContainer">#FFC107</color>  <!-- amber -->
+    <color name="md_theme_outlineVariant">#BDBDBD</color>     <!-- grey -->
+
+    <!-- Text and surface colours -->
+    <color name="colorOnPrimary">#FFFFFF</color>
+    <color name="colorOnSecondary">#FFFFFF</color>
+    <color name="colorOnTertiary">#000000</color>
+    <color name="colorOnSurfaceVariant">#000000</color>
+
+
+
+
 </resources>

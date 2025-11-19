@@ -7,28 +7,35 @@ import androidx.fragment.app.FragmentTransaction;
 import org.me.gcu.omoike_grace_s2125456.R;
 import org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment;
 import org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyConversionFragment;
+import org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyMapFragment;
 
-public class MainActivity extends AppCompatActivity implements CurrencyListFragment.OnCurrencySelectedListener {
+public class MainActivity extends AppCompatActivity
+        implements CurrencyListFragment.OnCurrencySelectedListener, OnCurrencyActionListener {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Load the first fragment (Currency List)
+        // Load currency list on start
         if (savedInstanceState == null) {
+
+
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentContainer, new CurrencyListFragment())
+                    .replace(R.id.fragmentContainer, new CurrencyListFragment(), "CurrencyList")
                     .commit();
         }
     }
 
-    // This method is called from CurrencyListFragment when a currency is tapped
     @Override
     public void onCurrencySelected(String code, double rate) {
-        CurrencyConversionFragment conversionFragment = new CurrencyConversionFragment();
+        onConvert(code, rate); // reuse same conversion logic
+    }
 
+    @Override
+    public void onConvert(String code, double rate) {
+        CurrencyConversionFragment conversionFragment = new CurrencyConversionFragment();
         Bundle args = new Bundle();
         args.putString("currencyCode", code);
         args.putDouble("currencyRate", rate);
@@ -36,7 +43,20 @@ public class MainActivity extends AppCompatActivity implements CurrencyListFragm
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.fragmentContainer, conversionFragment);
-        transaction.addToBackStack(null); // allows back navigation
+        transaction.addToBackStack(null);
+        transaction.commit();
+    }
+
+    @Override
+    public void onShowMap(String code) {
+        CurrencyMapFragment mapFragment = new CurrencyMapFragment();
+        Bundle args = new Bundle();
+        args.putString("currencyCode", code);
+        mapFragment.setArguments(args);
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        transaction.replace(R.id.fragmentContainer, mapFragment);
+        transaction.addToBackStack(null);
         transaction.commit();
     }
 }

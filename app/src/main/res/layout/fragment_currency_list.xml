@@ -9,7 +9,7 @@
     <!-- Title -->
     <TextView
         android:id="@+id/summaryTitle"
-        android:text="GBP Exchange Rates (Summary)"
+        android:text="GBP Exchange Rates"
         android:textStyle="bold"
         android:textSize="20sp"
         android:layout_marginBottom="8dp"
@@ -105,23 +105,83 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- Fetch Button -->
-    <Button
-        android:id="@+id/startButton"
-        android:text="Fetch Currency Rates"
-        android:background="@android:color/holo_blue_dark"
-        android:textColor="@android:color/white"
-        android:layout_width="match_parent"
+    <TextView
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp" />
+        android:text="Search for Currencies Below!"
+        android:textSize="20sp"
+        android:layout_marginBottom="8dp"
+        android:layout_gravity="center_horizontal" />
 
     <!-- Search Bar -->
     <SearchView
         android:id="@+id/searchView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:queryHint="Search by name or code..."
+        android:queryHint="Search by name, code or country..."
         android:iconifiedByDefault="false"
+        android:layout_marginBottom="8dp" />
+
+    <!-- Colour Legend -->
+    <LinearLayout
+        android:id="@+id/legendLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#EEEEEE"
+        android:padding="6dp"
+        android:layout_marginBottom="8dp">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FFCDD2"
+            android:text="Weak (&lt;1.0)"
+            android:padding="4dp"
+            android:textSize="12sp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#FFF9C4"
+            android:text="Moderate (&lt;5.0)"
+            android:padding="4dp"
+            android:textSize="12sp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="#BBDEFB"
+            android:text="Strong (&lt;50.0)"
+            android:padding="4dp"
+            android:textSize="12sp"
+            android:layout_marginEnd="6dp" />
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="#C8E6C9"
+            android:padding="4dp"
+            android:text="V - Strong (\u2265 50.0)"
+            android:textSize="12sp"
+            android:gravity="center"
+            android:maxLines="2"
+            android:ellipsize="end" />
+
+    </LinearLayout>
+    <!--  Last Updated label -->
+    <TextView
+        android:id="@+id/lastUpdatedText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_horizontal"
+        android:text="Last updated: just now"
+        android:textSize="12sp"
+        android:textStyle="italic"
         android:layout_marginBottom="8dp" />
 
     <!-- List of all currencies -->

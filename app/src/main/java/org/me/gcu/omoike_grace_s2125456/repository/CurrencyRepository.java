@@ -1,7 +1,5 @@
 package org.me.gcu.omoike_grace_s2125456.repository;
 
-
-
 import android.util.Log;
 
 import org.me.gcu.omoike_grace_s2125456.model.CurrencyItem;
@@ -33,13 +31,35 @@ public class CurrencyRepository {
             }
             in.close();
 
-            currencyList = parseXML(result.toString());
+            // --- Clean the feed before parsing ---
+            String cleanedXml = sanitizeFeed(result.toString());
+            currencyList = parseXML(cleanedXml);
 
         } catch (Exception e) {
             Log.e("Repository", "Error fetching data: " + e.getMessage());
         }
 
         return currencyList;
+    }
+
+    /**
+     * Remove invalid HTML/script tags from the RSS feed to avoid crashes.
+     */
+    private String sanitizeFeed(String xml) {
+        if (xml == null) return "";
+
+        // Remove <script> ... </script> blocks
+        xml = xml.replaceAll("(?is)<script[\\s\\S]*?</script>", "");
+
+        // Remove invalid attributes like defer='2.0'
+        xml = xml.replaceAll("defer=['\"].*?['\"]", "");
+
+        // Ensure XML header consistency
+        if (!xml.startsWith("<?xml")) {
+            xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" + xml;
+        }
+
+        return xml;
     }
 
     private ArrayList<CurrencyItem> parseXML(String xmlData) {
@@ -88,11 +108,46 @@ public class CurrencyRepository {
                     }
                 } else if (eventType == XmlPullParser.END_TAG) {
                     if ("item".equals(xpp.getName()) && currentItem != null) {
+
+                        // --- Extract target currency code ---
                         if (currentItem.getTitle() != null && currentItem.getTitle().contains("/")) {
                             String[] titleParts = currentItem.getTitle().split("/");
                             currentItem.setTargetCurrencyCode(titleParts[1].trim());
                         }
+
+                        // --- Extract country + currency name ---
+                        if (currentItem.getTitle() != null) {
+                            String title = currentItem.getTitle();
+                            if (title.contains("/")) {
+                                String[] parts = title.split("/");
+                                if (parts.length > 1) {
+                                    String rightSide = parts[1]
+                                            .replace("Exchange Rate", "")
+                                            .replace("to GBP", "")
+                                            .trim();
+
+                                    String country = extractCountryFromName(rightSide);
+                                    currentItem.setCountryName(country);
+
+                                    String[] rightWords = rightSide.split(" ");
+                                    if (rightWords.length > 1) {
+                                        currentItem.setCurrencyName(rightWords[rightWords.length - 1]);
+                                    } else {
+                                        currentItem.setCurrencyName(rightSide);
+                                    }
+
+                                    currentItem.setTargetCurrencyCode(rightSide);
+                                }
+                            }
+                        }
+
+                        Log.d("PARSE_DEBUG",
+                                "Title: " + currentItem.getTitle()
+                                        + " | Code: " + currentItem.getTargetCurrencyCode()
+                                        + " | Country: " + currentItem.getCountryName()
+                                        + " | Currency: " + currentItem.getCurrencyName());
                         currencyList.add(currentItem);
+
                         currentItem = null;
                     }
                     currentTag = null;
@@ -105,5 +160,30 @@ public class CurrencyRepository {
         }
 
         return currencyList;
+    }
+
+    // --- Helper: derive country name from currency title ---
+    private String extractCountryFromName(String currencyName) {
+        if (currencyName == null) return "";
+        currencyName = currencyName.toLowerCase();
+
+        String[] words = currencyName.split(" ");
+        if (words.length > 1) {
+            String adjective = words[0];
+            String country = adjective.substring(0, 1).toUpperCase() + adjective.substring(1);
+
+            switch (country.toLowerCase()) {
+                case "american": return "United States";
+                case "british": return "United Kingdom";
+                case "emirati": return "United Arab Emirates";
+                case "saudi": return "Saudi Arabia";
+                case "south":
+                    if (currencyName.contains("south african")) return "South Africa";
+                    if (currencyName.contains("south korean")) return "South Korea";
+                    break;
+            }
+            return country;
+        }
+        return "";
     }
 }
