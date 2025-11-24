@@ -16,17 +16,28 @@ import java.util.concurrent.Executors;
 public class CurrencyViewModel extends ViewModel {
 
     private final MutableLiveData<ArrayList<CurrencyItem>> currencyData = new MutableLiveData<>();
+    private final MutableLiveData<String> feedDate = new MutableLiveData<>();
     private final CurrencyRepository repository = new CurrencyRepository();
 
     public LiveData<ArrayList<CurrencyItem>> getCurrencyData() {
         return currencyData;
     }
+    public LiveData<String> getFeedDate() {
+        return feedDate;
+    }
+
 
     public void loadCurrencies() {
+
         ExecutorService executor = Executors.newSingleThreadExecutor();
         executor.execute(() -> {
             ArrayList<CurrencyItem> data = repository.fetchAndParseData();
             currencyData.postValue(data);
+
+            String rssDate = repository.getFeedLastUpdated();
+            if (rssDate != null) {
+                feedDate.postValue(rssDate);
+            }
         });
     }
 }

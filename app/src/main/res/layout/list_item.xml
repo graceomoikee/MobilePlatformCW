@@ -53,8 +53,9 @@
                 android:text="Map"
                 android:textAllCaps="false"
                 style="?attr/materialButtonStyle"
-                android:layout_marginEnd="8dp" />
-
+                android:layout_marginEnd="8dp"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnConvert"
@@ -62,7 +63,9 @@
                 android:layout_height="wrap_content"
                 android:text="Convert"
                 android:textAllCaps="false"
-                style="?attr/materialButtonStyle" />
+                style="?attr/materialButtonStyle"
+                android:focusable="false"
+                android:focusableInTouchMode="false" />
         </LinearLayout>
 
     </LinearLayout>

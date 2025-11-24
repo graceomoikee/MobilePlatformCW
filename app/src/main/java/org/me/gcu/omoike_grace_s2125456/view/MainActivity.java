@@ -12,25 +12,25 @@ import org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyMapFragment;
 public class MainActivity extends AppCompatActivity
         implements CurrencyListFragment.OnCurrencySelectedListener, OnCurrencyActionListener {
 
+    private static final int CONTAINER_ID = R.id.fragmentContainer;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // Load currency list on start
         if (savedInstanceState == null) {
-
-
+            // Always load the list fragment first for BOTH orientations
             getSupportFragmentManager()
                     .beginTransaction()
-                    .replace(R.id.fragmentContainer, new CurrencyListFragment(), "CurrencyList")
+                    .replace(CONTAINER_ID, new CurrencyListFragment(), "CurrencyList")
                     .commit();
         }
     }
 
     @Override
     public void onCurrencySelected(String code, double rate) {
-        onConvert(code, rate); // reuse same conversion logic
+        onConvert(code, rate);
     }
 
     @Override
@@ -42,21 +42,24 @@ public class MainActivity extends AppCompatActivity
         conversionFragment.setArguments(args);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragmentContainer, conversionFragment);
+        transaction.replace(CONTAINER_ID, conversionFragment);
         transaction.addToBackStack(null);
         transaction.commit();
     }
 
     @Override
-    public void onShowMap(String code) {
+    public void onShowMap(String code, double rate) {
         CurrencyMapFragment mapFragment = new CurrencyMapFragment();
         Bundle args = new Bundle();
         args.putString("currencyCode", code);
+        args.putDouble("currencyRate", rate);
+
         mapFragment.setArguments(args);
 
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.replace(R.id.fragmentContainer, mapFragment);
+        transaction.replace(CONTAINER_ID, mapFragment);
         transaction.addToBackStack(null);
         transaction.commit();
     }
+
 }

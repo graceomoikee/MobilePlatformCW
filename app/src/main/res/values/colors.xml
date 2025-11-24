@@ -4,9 +4,9 @@
     <color name="white">#FFFFFFFF</color>
 
     <!-- Main theme colours -->
-    <color name="md_theme_primaryContainer">#1976D2</color>   <!-- blue -->
-    <color name="md_theme_secondaryContainer">#388E3C</color> <!-- green -->
-    <color name="md_theme_tertiaryContainer">#FFC107</color>  <!-- amber -->
+    <color name="md_theme_primaryContainer">#537F31</color>   <!-- blue -->
+    <color name="md_theme_secondaryContainer">#7F317A</color> <!-- green -->
+    <color name="md_theme_tertiaryContainer">#76C1EA</color>  <!-- amber -->
     <color name="md_theme_outlineVariant">#BDBDBD</color>     <!-- grey -->
 
     <!-- Text and surface colours -->

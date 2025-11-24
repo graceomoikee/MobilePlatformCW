@@ -44,6 +44,31 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         return position;
     }
 
+    // -------------------------
+    //  COUNTRY EXTRACTION LOGIC
+    // -------------------------
+    private String extractCountry(String fullName) {
+        if (fullName == null) return "";
+
+        // Remove (XXX)
+        int idx = fullName.lastIndexOf("(");
+        if (idx > 0) {
+            fullName = fullName.substring(0, idx).trim();
+        }
+
+        // Remove last word (currency name)
+        String[] parts = fullName.split(" ");
+        if (parts.length > 1) {
+            StringBuilder country = new StringBuilder();
+            for (int i = 0; i < parts.length - 1; i++) {
+                country.append(parts[i]).append(" ");
+            }
+            return country.toString().trim();
+        }
+
+        return fullName.trim();
+    }
+
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         if (convertView == null) {
@@ -74,12 +99,22 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         }
 
         // --- Button actions ---
-        btnMap.setOnClickListener(v -> {
+        /*btnMap.setOnClickListener(v -> {
             if (context instanceof OnCurrencyActionListener) {
                 ((OnCurrencyActionListener) context)
                         .onShowMap(item.getTargetCurrencyCode());
             }
+        });*/
+        btnMap.setOnClickListener(v -> {
+            if (context instanceof OnCurrencyActionListener) {
+                ((OnCurrencyActionListener) context)
+                        .onShowMap(
+                                item.getTargetCurrencyCode(),
+                                item.getExchangeRate()      // ⬅ pass rate as well
+                        );
+            }
         });
+
 
         btnConvert.setOnClickListener(v -> {
             if (context instanceof OnCurrencyActionListener) {
@@ -91,33 +126,38 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         return convertView;
     }
 
+    // -------------------------
+    //        FILTERING
+    // -------------------------
     @Override
     public Filter getFilter() {
         return new Filter() {
+
             @Override
             protected FilterResults performFiltering(CharSequence constraint) {
-                List<CurrencyItem> filteredList = new ArrayList<>();
+                List<CurrencyItem> tempList = new ArrayList<>();
 
                 if (constraint == null || constraint.length() == 0) {
-                    filteredList.addAll(originalList);
+                    tempList.addAll(originalList);
                 } else {
                     String filterPattern = constraint.toString().toLowerCase().trim();
 
                     for (CurrencyItem item : originalList) {
+
                         String name = item.getCurrencyName() != null ? item.getCurrencyName().toLowerCase() : "";
                         String code = item.getTargetCurrencyCode() != null ? item.getTargetCurrencyCode().toLowerCase() : "";
-                        String country = item.getCountryName() != null ? item.getCountryName().toLowerCase() : "";
+                        String country = extractCountry(item.getCurrencyName()).toLowerCase();
 
                         if (name.contains(filterPattern)
                                 || code.contains(filterPattern)
                                 || country.contains(filterPattern)) {
-                            filteredList.add(item);
+                            tempList.add(item);
                         }
                     }
                 }
 
                 FilterResults results = new FilterResults();
-                results.values = filteredList;
+                results.values = tempList;
                 return results;
             }
 
@@ -138,6 +178,3 @@ public class CurrencyAdapter extends BaseAdapter implements Filterable {
         notifyDataSetChanged();
     }
 }
-
-
-

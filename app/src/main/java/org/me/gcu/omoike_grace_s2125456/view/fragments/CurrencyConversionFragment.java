@@ -19,6 +19,12 @@ public class CurrencyConversionFragment extends Fragment {
     private String selectedCode;
     private double selectedRate;
     private boolean isReversed = false;
+    private boolean isSwapped = false;
+    private EditText gbpInput;
+    private TextView resultText;
+    private TextView titleText;
+    private TextView rateInfo;
+
 
     @Nullable
     @Override
@@ -35,10 +41,12 @@ public class CurrencyConversionFragment extends Fragment {
         }
 
         // --- Bind UI ---
-        TextView titleText = view.findViewById(R.id.titleText);
-        TextView rateInfo = view.findViewById(R.id.rateInfo);
-        EditText gbpInput = view.findViewById(R.id.gbpInput);
-        TextView resultText = view.findViewById(R.id.resultText);
+        titleText = view.findViewById(R.id.titleText);
+        rateInfo = view.findViewById(R.id.rateInfo);
+        gbpInput = view.findViewById(R.id.gbpInput);
+        resultText = view.findViewById(R.id.resultText);
+
+
         Button btnSwap = view.findViewById(R.id.btnSwap);
         Button btnEquals = view.findViewById(R.id.btnEquals);
         Button backButton = view.findViewById(R.id.backButton);
@@ -88,7 +96,7 @@ public class CurrencyConversionFragment extends Fragment {
         });
 
         // --- Perform conversion ---
-        btnEquals.setOnClickListener(v -> {
+       /* btnEquals.setOnClickListener(v -> {
             String input = gbpInput.getText().toString().trim();
             if (input.isEmpty()) {
                 resultText.setText("Enter amount");
@@ -110,7 +118,33 @@ public class CurrencyConversionFragment extends Fragment {
             } catch (NumberFormatException e) {
                 resultText.setText("Invalid input");
             }
+        });*/
+        btnEquals.setOnClickListener(v -> {
+            try {
+                String input = gbpInput.getText().toString().trim();
+                if (input.isEmpty()) {
+                    resultText.setText("Please enter an amount");
+                    return;
+                }
+
+                double value = Double.parseDouble(input);
+                double result;
+
+                if (isSwapped) {
+                    // Converting FROM target currency TO GBP
+                    result = value / selectedRate;
+                    resultText.setText(String.format("%.2f %s = %.2f GBP", value, selectedCode, result));
+                } else {
+                    // Converting FROM GBP TO target currency
+                    result = value * selectedRate;
+                    resultText.setText(String.format("%.2f GBP = %.2f %s", value, result, selectedCode));
+                }
+
+            } catch (NumberFormatException e) {
+                resultText.setText("Invalid input");
+            }
         });
+
 
         // --- Back button (return to list) ---
         //backButton.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
@@ -128,6 +162,7 @@ public class CurrencyConversionFragment extends Fragment {
 
             Bundle args = new Bundle();
             args.putString("currencyCode", selectedCode); // pass selected currency code
+            args.putDouble("currencyRate", selectedRate);
             mapFragment.setArguments(args);
 
             android.util.Log.d("MAP_DEBUG", "Passing currencyCode = " + selectedCode);
@@ -139,7 +174,7 @@ public class CurrencyConversionFragment extends Fragment {
                     .commit();
         });
 
-        // --- 🔄 Restore input and result after rotation ---
+        // ---  Restore input and result after rotation ---
         if (savedInstanceState != null) {
             String savedInput = savedInstanceState.getString("inputAmount", "");
             String savedResult = savedInstanceState.getString("resultText", "");
@@ -156,10 +191,13 @@ public class CurrencyConversionFragment extends Fragment {
     public void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
 
-        EditText gbpInput = requireView().findViewById(R.id.gbpInput);
-        TextView resultText = requireView().findViewById(R.id.resultText);
+        if (gbpInput != null) {
+            outState.putString("inputAmount", gbpInput.getText().toString());
+        }
 
-        outState.putString("inputAmount", gbpInput.getText().toString());
-        outState.putString("resultText", resultText.getText().toString());
+        if (resultText != null) {
+            outState.putString("resultText", resultText.getText().toString());
+        }
     }
+
 }

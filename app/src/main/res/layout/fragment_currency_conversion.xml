@@ -19,14 +19,7 @@
 
 
     <!-- Card-style header -->
-        <com.google.android.material.card.MaterialCardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="6dp"
-            app:strokeWidth="1dp"
-            app:strokeColor="@android:color/darker_gray"
-            android:layout_marginBottom="8dp">
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -38,9 +31,9 @@
                 <TextView
                     android:id="@+id/titleText"
                     android:text="Currency Conversion"
-                    android:textSize="22sp"
+                    android:textSize="27sp"
                     android:textStyle="bold"
-                    android:textColor="?attr/colorPrimary"
+                    android:textColor="@color/colorOnTertiary"
                     android:gravity="center"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content" />
@@ -55,13 +48,15 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content" />
             </LinearLayout>
-        </com.google.android.material.card.MaterialCardView>
+
 
         <!-- Input field -->
         <com.google.android.material.textfield.TextInputLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="Enter amount">
+            android:hint="Enter amount"
+            app:boxBackgroundMode="outline"
+            app:boxStrokeColor="@color/colorOnTertiary">
 
             <com.google.android.material.textfield.TextInputEditText
                 android:id="@+id/gbpInput"

@@ -1,7 +1,10 @@
-// java
 package org.me.gcu.omoike_grace_s2125456.view.fragments;
 
 import android.content.Context;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkInfo;
+import android.net.NetworkRequest;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -26,14 +29,17 @@ public class CurrencyListFragment extends Fragment {
     private static final String KEY_LIST_STATE = "key_list_state";
     private static final String KEY_LAST_UPDATED = "key_last_updated";
     private static final String KEY_SELECTED_CODE = "key_selected_code";
+    private ConnectivityManager.NetworkCallback networkCallback;
+
 
     private ArrayList<CurrencyItem> currencyList = new ArrayList<>();
     private CurrencyAdapter adapter;
     private CurrencyViewModel viewModel;
+    private SearchView searchView;
 
     private ListView listView;
     private Handler handler;
-    private final long REFRESH_INTERVAL_MS = 60_000L;
+    private final long REFRESH_INTERVAL_MS = 10_000L;
     private TextView lastUpdated;
     private Runnable refreshTask;
     private Parcelable listViewState;
@@ -53,7 +59,21 @@ public class CurrencyListFragment extends Fragment {
         adapter = new CurrencyAdapter(requireContext(), currencyList);
         listView.setAdapter(adapter);
 
+        ConnectivityManager cm =
+                (ConnectivityManager) requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = cm.getActiveNetworkInfo();
+
+        if (netInfo == null || !netInfo.isConnected()) {
+            Toast.makeText(requireContext(), "No internet connection", Toast.LENGTH_LONG).show();
+        }
+
+
         viewModel = new ViewModelProvider(requireActivity()).get(CurrencyViewModel.class);
+
+        viewModel.getFeedDate().observe(getViewLifecycleOwner(), date -> {
+            if (date != null) lastUpdated.setText("RSS updated: " + date);
+        });
+
 
         // Summary cards - same IDs must exist in both layouts
         View usdCard = view.findViewById(R.id.usdCard);
@@ -66,6 +86,22 @@ public class CurrencyListFragment extends Fragment {
 
         // Observe LiveData — will re-deliver current data after rotation
         viewModel.getCurrencyData().observe(getViewLifecycleOwner(), parsedCurrencies -> {
+            /*if (parsedCurrencies == null || parsedCurrencies.isEmpty()) {
+                Toast.makeText(requireContext(),
+                        "Unable to load data. Please check your internet connection.",
+                        Toast.LENGTH_LONG).show();
+                return;
+            }*/
+            if (parsedCurrencies == null || parsedCurrencies.isEmpty()) {
+                Toast.makeText(
+                        requireContext(),
+                        "Unable to load data. Please check your internet connection.",
+                        Toast.LENGTH_LONG
+                ).show();
+                return;
+            }
+
+
             currencyList.clear();
             currencyList.addAll(parsedCurrencies);
             adapter.updateData(parsedCurrencies);
@@ -90,13 +126,22 @@ public class CurrencyListFragment extends Fragment {
                 });
             }
 
-            // If a card selection was requested before restore, notify activity
+            /*// If a card selection was requested before restore, notify activity
             if (pendingSelectedCode != null) {
                 if (getActivity() instanceof OnCurrencySelectedListener) {
-                    ((OnCurrencySelectedListener) getActivity()).onCurrencySelected(pendingSelectedCode, findRateForCode(pendingSelectedCode));
+                    ((OnCurrencySelectedListener) getActivity()).onCurrencySelected(pendingSelectedCode, findRateForCodeOrNull(pendingSelectedCode));
+                }
+                pendingSelectedCode = null;
+            }*/
+            if (pendingSelectedCode != null) {
+                Double rate = findRateForCodeOrNull(pendingSelectedCode);
+                if (rate != null && getActivity() instanceof OnCurrencySelectedListener) {
+                    ((OnCurrencySelectedListener) getActivity()).onCurrencySelected(pendingSelectedCode, rate);
                 }
                 pendingSelectedCode = null;
             }
+
+
         });
 
         // Search
@@ -116,20 +161,37 @@ public class CurrencyListFragment extends Fragment {
 
         // Handler + Runnable (guarded)
         handler = new Handler(Looper.getMainLooper());
-        refreshTask = new Runnable() {
+        /*refreshTask = new Runnable() {
             @Override public void run() {
                 if (!isAdded() || getView() == null) return;
                 // Only load if needed — ViewModel keeps data across rotations
                 viewModel.loadCurrencies();
-                if (lastUpdated != null) {
-                    String time = java.text.DateFormat.getTimeInstance().format(new Date());
-                    lastUpdated.setText("Last updated: " + time);
-                }
+                //if (lastUpdated != null) {
+                //    String time = java.text.DateFormat.getTimeInstance().format(new Date());
+                //    lastUpdated.setText("Last updated: " + time);
+                //}
                 Context ctx = getContext();
-                if (ctx != null) Toast.makeText(ctx, "Exchange rates automatically refreshed", Toast.LENGTH_SHORT).show();
+                if (ctx != null)
+                    //Toast.makeText(ctx, "Exchange rates automatically refreshed", Toast.LENGTH_SHORT).show();
+                handler.postDelayed(this, REFRESH_INTERVAL_MS);
+            }
+        };*/
+        refreshTask = new Runnable() {
+            @Override
+            public void run() {
+                if (!isAdded() || getView() == null) return;
+                Context ctx = getContext();
+
+                if (ctx != null)
+                    Toast.makeText(ctx, "Exchange rates automatically refreshed", Toast.LENGTH_SHORT).show();
+
+                viewModel.loadCurrencies();
+
+                // Schedule next refresh
                 handler.postDelayed(this, REFRESH_INTERVAL_MS);
             }
         };
+
 
         // Initial load only if ViewModel has no data
         if (viewModel.getCurrencyData().getValue() == null || viewModel.getCurrencyData().getValue().isEmpty()) {
@@ -139,27 +201,114 @@ public class CurrencyListFragment extends Fragment {
         return view;
     }
 
-    @Override
+    /*@Override
     public void onResume() {
         super.onResume();
         if (handler != null && refreshTask != null) {
             handler.removeCallbacks(refreshTask);
             handler.postDelayed(refreshTask, 10_000L);
         }
+    }*/
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        // --- Existing auto-refresh code ---
+        if (handler != null && refreshTask != null) {
+            handler.removeCallbacks(refreshTask);
+            handler.postDelayed(refreshTask, 10_000L);
+        }
+
+        // --- NEW: Network regained → refresh immediately ---
+        ConnectivityManager cm = (ConnectivityManager)
+                requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+        NetworkRequest request = new NetworkRequest.Builder().build();
+
+        networkCallback = new ConnectivityManager.NetworkCallback() {
+            @Override
+            public void onAvailable(Network network) {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() -> {
+                        viewModel.loadCurrencies();   // refresh immediately
+                        Toast.makeText(
+                                requireContext(),
+                                "Connection restored. Rates updated.",
+                                Toast.LENGTH_SHORT
+                        ).show();
+                    });
+                }
+            }
+            public void onLost(Network network) {
+                if (isAdded()) {
+                    requireActivity().runOnUiThread(() ->
+                            Toast.makeText(requireContext(),
+                                    "Internet connection lost.",
+                                    Toast.LENGTH_SHORT
+                            ).show()
+                    );
+                }
+            }
+        };
+
+        cm.registerNetworkCallback(request, networkCallback);
     }
 
-    @Override
+
+    /*@Override
     public void onPause() {
         super.onPause();
         if (handler != null && refreshTask != null) handler.removeCallbacks(refreshTask);
+    }*/
+    @Override
+    public void onPause() {
+        super.onPause();
+
+        if (handler != null && refreshTask != null)
+            handler.removeCallbacks(refreshTask);
+
+        // NEW: Stop network listener
+        if (networkCallback != null) {
+            ConnectivityManager cm = (ConnectivityManager)
+                    requireContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+            cm.unregisterNetworkCallback(networkCallback);
+            networkCallback = null;
+        }
     }
 
-    @Override
+    /*@Override
     public void onDestroyView() {
         if (handler != null && refreshTask != null) handler.removeCallbacks(refreshTask);
         lastUpdated = null;
         super.onDestroyView();
+    }*/
+    @Override
+    public void onDestroyView() {
+        // Stop all callbacks first
+        if (handler != null && refreshTask != null) {
+            handler.removeCallbacksAndMessages(null);
+        }
+
+        // Clear references
+        searchView = null;
+        listView = null;
+        lastUpdated = null;
+        adapter = null;
+
+        super.onDestroyView();
     }
+
+    @Override
+    public void onDetach() {
+        super.onDetach();
+        // Final cleanup
+        if (handler != null) {
+            handler.removeCallbacksAndMessages(null);
+            handler = null;
+        }
+        refreshTask = null;
+    }
+
 
     @Override
     public void onSaveInstanceState(@NonNull Bundle outState) {
@@ -173,8 +322,8 @@ public class CurrencyListFragment extends Fragment {
         if (lastUpdated != null) {
             outState.putString(KEY_LAST_UPDATED, lastUpdated.getText().toString());
         }
-        // optional: save selected code if needed
-        // outState.putString(KEY_SELECTED_CODE, currentlySelectedCode);
+
+
     }
 
     @Override
@@ -189,17 +338,27 @@ public class CurrencyListFragment extends Fragment {
     }
 
     // Helper to find rate by code
-    private double findRateForCode(String code) {
+    /*private double findRateForCode(String code) {
         for (CurrencyItem item : currencyList) {
             if (item.getTargetCurrencyCode() != null && item.getTargetCurrencyCode().contains(code)) {
                 return item.getExchangeRate();
             }
         }
         return 0.0;
+    }*/
+    private Double findRateForCodeOrNull(String code) {
+        for (CurrencyItem item : currencyList) {
+            if (item.getTargetCurrencyCode() != null &&
+                    item.getTargetCurrencyCode().contains("(" + code + ")")) {
+                return item.getExchangeRate();
+            }
+        }
+        return null;
     }
 
-    private void openConversion(String code) {
-        double rate = findRateForCode(code);
+
+   /* private void openConversion(String code) {
+        double rate = findRateForCodeOrNull(code);
         if (!isAdded()) {
             // Fragment not attached yet — remember to notify later inside observer
             pendingSelectedCode = code;
@@ -208,7 +367,21 @@ public class CurrencyListFragment extends Fragment {
         if (getActivity() instanceof OnCurrencySelectedListener) {
             ((OnCurrencySelectedListener) getActivity()).onCurrencySelected(code, rate);
         }
-    }
+    }*/
+   private void openConversion(String code) {
+       Double rate = findRateForCodeOrNull(code);
+
+       if (rate == null) {
+           // Data not loaded yet — wait!
+           pendingSelectedCode = code;
+           return;
+       }
+
+       if (getActivity() instanceof OnCurrencySelectedListener) {
+           ((OnCurrencySelectedListener) getActivity()).onCurrencySelected(code, rate);
+       }
+   }
+
 
     public interface OnCurrencySelectedListener {
         void onCurrencySelected(String code, double rate);

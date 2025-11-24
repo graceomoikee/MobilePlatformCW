@@ -40,6 +40,8 @@ public class CurrencyItem {
     public String getCurrencyName() { return currencyName; }
     public void setCurrencyName(String currencyName) { this.currencyName = currencyName; }
 
+
+
     @Override
     public String toString() {
         return "CurrencyItem{" +

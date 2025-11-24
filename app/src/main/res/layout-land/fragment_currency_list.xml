@@ -15,12 +15,12 @@
         android:paddingEnd="8dp">
 
         <TextView
-            android:id="@+id/summaryTitle"
-            android:text="GBP Exchange Rates"
-            android:textStyle="bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Search for Currencies Below!"
             android:textSize="20sp"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_marginBottom="8dp"
+            android:layout_gravity="center_horizontal" />
 
         <LinearLayout
             android:id="@+id/topCurrenciesLayout"
@@ -119,6 +119,14 @@
         android:layout_height="match_parent"
         android:orientation="vertical"
         android:paddingStart="8dp">
+
+        <TextView
+            android:id="@+id/summaryTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="GBP Exchange Rates"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
         <TextView
             android:id="@+id/lastUpdatedText"

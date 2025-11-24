@@ -32,11 +32,15 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
 
     private String currencyCode;
 
+    private double currencyRate;
+
+
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null)
             currencyCode = getArguments().getString("currencyCode");
+        currencyRate = getArguments().getDouble("currencyRate", 0.0);
     }
 
     @Nullable
@@ -59,7 +63,7 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
         Button btnBackToConvert = view.findViewById(R.id.btnBackToConvert);
 
         //Button btnBackToConvert = view.findViewById(R.id.btnBackToConvert);
-        if (btnBackToConvert != null) {
+        /*if (btnBackToConvert != null) {
             btnBackToConvert.setOnClickListener(v -> {
                 String code = currencyCode;
                 if (code != null && code.contains("(") && code.contains(")")) {
@@ -73,7 +77,27 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
                     requireActivity().getSupportFragmentManager().popBackStack();
                 }
             });
+        }*/
+        if (btnBackToConvert != null) {
+
+            btnBackToConvert.setOnClickListener(v -> {
+                CurrencyConversionFragment frag = new CurrencyConversionFragment();
+
+                Bundle args = new Bundle();
+                args.putString("currencyCode", currencyCode);
+                args.putDouble("currencyRate", currencyRate);
+                frag.setArguments(args);
+
+                requireActivity().getSupportFragmentManager()
+                        .beginTransaction()
+                        .replace(R.id.fragmentContainer, frag)
+                        .addToBackStack(null)
+                        .commit();
+            });
+
+
         }
+
 
         // Back to currency list
         btnBackToList.setOnClickListener(v -> {
@@ -86,26 +110,7 @@ public class CurrencyMapFragment extends Fragment implements OnMapReadyCallback 
         });
 
         // Convert button: explicitly ask the Activity to open the conversion screen
-        if (btnBackToConvert != null) {
-            btnBackToConvert.setOnClickListener(v -> {
-                // parse ISO code from strings like "Euro (EUR)"
-                String code = currencyCode;
-                if (code != null && code.contains("(") && code.contains(")")) {
-                    code = code.substring(code.indexOf("(") + 1, code.indexOf(")"));
-                }
 
-                // If the activity implements the listener, delegate to it (so it opens conversion)
-                if (requireActivity() instanceof org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) {
-                    org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener listener =
-                            (org.me.gcu.omoike_grace_s2125456.view.fragments.CurrencyListFragment.OnCurrencySelectedListener) requireActivity();
-                    // pass 0.0 for rate if you don't have it here; MainActivity can open conversion UI and fetch/update rate
-                    listener.onCurrencySelected(code, 0.0);
-                } else {
-                    // fallback: pop back stack (existing behavior)
-                    requireActivity().getSupportFragmentManager().popBackStack();
-                }
-            });
-        }
     }
 
     @Override

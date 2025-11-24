@@ -17,6 +17,11 @@ public class CurrencyRepository {
 
     private static final String urlSource = "https://www.fx-exchange.com/gbp/rss.xml";
 
+    private String feedLastUpdated = null;
+    public String getFeedLastUpdated() {
+        return feedLastUpdated;
+    }
+
     public ArrayList<CurrencyItem> fetchAndParseData() {
         ArrayList<CurrencyItem> currencyList = new ArrayList<>();
         StringBuilder result = new StringBuilder();
@@ -78,6 +83,9 @@ public class CurrencyRepository {
             while (eventType != XmlPullParser.END_DOCUMENT) {
                 if (eventType == XmlPullParser.START_TAG) {
                     currentTag = xpp.getName();
+                    if (("pubDate".equals(currentTag) || "lastBuildDate".equals(currentTag)) && currentItem == null) {
+                        feedLastUpdated = xpp.nextText().trim();
+                    }
                     if ("item".equals(currentTag)) {
                         currentItem = new CurrencyItem();
                     }
